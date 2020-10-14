@@ -1,2 +1,2 @@
 # CMMN_StationSummary
-Script to help loop through CMMN stations to create summaries
+Script to help CMMN stations create data summaries
