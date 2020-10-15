@@ -45,18 +45,21 @@ max.year<-2019
 
 ```
 
-#Download Data 
+#Site Loop
 
-The user will need to have a naturecounts account and will need to have requested permission to access the data through the web portal system. Because I have full access my code does not include the `request_id`.
+```{r site loop, echo=FALSE}
 
-Here we will loop through the anal.param file and summarize the data that we want.The user will need to set `t` to the sites they have permission to access. 
+##Download Data 
+#The user will need to have a naturecounts account and will need to have requested permission to access the data through the web portal system. Because I have full access my code does not include the `request_id`.
 
-```{r Download, echo=FALSE}
+#Here we will loop through the anal.param file and summarize the data that we want.The user can also set `t` to the sites they have permission to access. 
 
-#######
-# Choose site based on the row number in the anal.param file
-t <-2
-#######
+for(t in 1:nrow(anal.param)) { #loop through each site in the Anal.param file
+
+
+# Choose site based on the row number in the anal.param file for testing
+t <-15
+
 
 collection <- as.character(anal.param[t, "collection"])
 station <- as.character(anal.param[t, "station"])
@@ -64,20 +67,16 @@ site <- as.character(anal.param[t, "site"])
 
 #load data from naturecounts
 #filters can be set to limit the amount of data dowloaded (e.g., years). 
-data.dl <- nc_data_dl(collections=collection, username = "dethier", info = "CMMN Data Summary Script")
+data.dl <- nc_data_dl(collections=collection, username = "dethier", info = "CMMN Data Summary Script", warn = FALSE, years=c(1995, 2019))
 
-```
+##Filter 
+#Here is an example of a custom filter made for a project wanting to know which CMMN stations have spring banding data (ObservationCount4)from 1995-2019. 
 
-#Filter 
+#ObservationCount = Daily Estimated Totals
+#ObservationCount2 = Daily Standardized Totals
+#ObservationCount3 = Census Count
+#ObservationCount4 = Number Banded
 
-Here is an example of a custom filter made for a project wanting to know which CMMN stations have spring banding data (ObservationCount4)from 1995-2019. 
-
-ObservationCount = Daily Estimated Totals
-ObservationCount2 = Daily Standardized Totals
-ObservationCount3 = Census Count
-ObservationCount4 = Number Banded
-
-```{r Filter, echo=FALSE}
 
 #select the columns you want to work with
 in.data<-data.dl %>%select("project_id", "ObservationCount4",  "SiteCode", "survey_year", "survey_month", "survey_day", "species_id")
@@ -92,18 +91,13 @@ in.data <- format_dates(in.data)
 #now assign season using the doy column     
 in.data <- in.data %>% mutate(season = if_else(doy < 180, "Spring", "Fall"))
   
-#filter data collected in the spring within the given year range
+#filter data collected in the spring within the given year range. Note the years filter here is redundant since the data were filter on download
 in.data <- in.data %>% 
   filter(survey_year>=1995 & survey_year<=2019) %>% 
   filter(season == "Spring")
 
-```
-
-#Summarize
-
-Now we can create a summary of how many speices are banded each spring
-
-```{r Summary, echo=FALSE}
+##Summarize
+#Now we can create a summary of how many speices are banded each spring
 
 #need to ensure the data type is correct for each column
 in.data$Year<-as.factor(in.data$survey_year)
@@ -115,6 +109,7 @@ sp.dat<-in.data %>% group_by(Year, SpeciesCode) %>% summarise(count = sum(Band))
 #now we want to reshape the dataframe so that we can determine what species have continuous data over the correct time period
 sp.dat<-cast(sp.dat, SpeciesCode~Year, value="count")
 
-write.csv(sp.dat, paste(out.dir, site, "BandSummary.csv", sep=""),             row.names = FALSE, append = TRUE, quote = FALSE, sep = ",", col.names = TRUE)
+write.csv(sp.dat, paste(out.dir, site, "BandSummary.csv", sep=""), row.names = FALSE, append = TRUE, quote = FALSE, sep = ",", col.names = TRUE)
 
+} #end of site loop
 ```
