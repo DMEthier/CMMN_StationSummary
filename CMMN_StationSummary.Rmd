@@ -27,7 +27,7 @@ library(reshape)
 Create an output directory with the name you want. Here I have chose MonthYear. . 
 ```{r Directory, echo=FALSE}
 
-out.dir <- paste("./Output/", "Oct2020", "/", sep = "")
+out.dir <- paste("./Output/", "Feb2021", "/", sep = "")
 dir.create(out.dir, showWarnings=FALSE, recursive=TRUE)
 
 ```
@@ -58,16 +58,16 @@ for(t in 1:nrow(anal.param)) { #loop through each site in the Anal.param file
 
 
 # Choose site based on the row number in the anal.param file for testing
-t <-15
-
+t <-6
 
 collection <- as.character(anal.param[t, "collection"])
 station <- as.character(anal.param[t, "station"])
 site <- as.character(anal.param[t, "site"])
 
 #load data from naturecounts
-#filters can be set to limit the amount of data dowloaded (e.g., years). 
-data.dl <- nc_data_dl(collections=collection, username = "dethier", info = "CMMN Data Summary Script", warn = FALSE, years=c(1995, 2019))
+#filters can be set to limit the amount of data dowloaded (e.g., years=c(1995, 2019)) 
+
+data.dl <- nc_data_dl(collections=collection, username = "dethier", info = "CMMN Data Summary Script", warn = FALSE)
 
 ##Filter 
 #Here is an example of a custom filter made for a project wanting to know which CMMN stations have spring banding data (ObservationCount4)from 1995-2019. 
@@ -93,7 +93,7 @@ in.data <- in.data %>% mutate(season = if_else(doy < 180, "Spring", "Fall"))
   
 #filter data collected in the spring within the given year range. Note the years filter here is redundant since the data were filter on download
 in.data <- in.data %>% 
-  filter(survey_year>=1995 & survey_year<=2019) %>% 
+ # filter(survey_year>=1995 & survey_year<=2019) %>% 
   filter(season == "Spring")
 
 ##Summarize
